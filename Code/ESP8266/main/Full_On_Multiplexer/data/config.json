@@ -1,0 +1,42 @@
+{
+    "__comment__":[
+        {
+            "RIGHTS":[
+                {"1":"call data"},
+                {"2":"edit clients"},
+                {"3":"edit networks"},
+                {"4":"edit statics"},
+                {"5":"pull config"},
+                {"6":"load config"}
+        ]
+    }
+    ],
+
+    "network":[
+        {"ID":0, "MASTER":"Magical Device", "PASSWORD":"groob123"},
+        {"ID":1, "SSID":"Magical Device", "PASSWORD":"groob123"}
+        ],
+
+    "clients":[
+        {"HOST":"admin", "PASSWORD":"admin", "RIGHTS":[1,2,3,4,5,6]},
+        {"HOST":"Test1", "PASSWORD":"Tornado123", "RIGHTS":[1]},
+        {"HOST":"Test2", "PASSWORD":"none", "RIGHTS":[1,6]}
+        ],
+    
+    "statics":[
+        {
+            "timers":[
+                {"MEASURE_STEP":59},
+                {"WAIT_FOR_CONNECTION":11},
+                {"NETWORK_STEP":29}
+            ],
+            
+            "allow":[
+                "allow_admin",
+                "allow_oled",
+                "allow_change_master"
+                
+            ]
+        }
+    ]
+}

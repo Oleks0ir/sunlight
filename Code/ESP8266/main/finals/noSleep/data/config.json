@@ -1,0 +1,72 @@
+{
+    "__comment__":[
+        {
+            "RIGHTS":[
+                {"0":"call data"},
+                {"1":"edit clients"},
+                {"2":"edit networks"},
+                {"3":"edit statics"},
+                {"4":"pull config"},
+                {"5":"load config"}
+        ]
+    }
+    ],
+
+    "network":[
+        {"ID":0, "SSID":"Magical Device", "PASSWORD":"groob123"},
+        {"ID":1, "SSID":"Labor2", "PASSWORD":"DasIstGeheim321!"},
+        {"ID":2, "SSID":"Fake", "PASSWORD":"nonoe"}
+        ],
+
+    "clients":[
+        {"HOST":"admin", "PASSWORD":"admin", "RIGHTS":[
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+        ]},
+        {"HOST":"Guest", "PASSWORD":"none", "RIGHTS":[
+            false,
+            true,
+            false,
+            false,
+            false,
+            false
+        ]},
+        {"HOST":"Test2", "PASSWORD":"none", "RIGHTS":[
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+        ]},
+        {"HOST":"Jujin", "PASSWORD":"1r31731", "RIGHTS":[
+            true,
+            false,
+            false,
+            true,
+            true,
+            true
+        ]}
+        ],
+    
+    "statics":[
+        {
+            "timers":[
+                {"MEASURE_STEP":59},
+                {"WAIT_FOR_CONNECTION":11},
+                {"NETWORK_STEP":29}
+            ],
+            
+            "allow":[
+                "allow_admin",
+                "allow_oled",
+                "allow_change_master"
+                
+            ]
+        }
+    ]
+}
