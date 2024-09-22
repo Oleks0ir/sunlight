@@ -275,11 +275,15 @@ void setupServer(){
           Serial.println(user.par_password);
 
           if (!checkUser()) {
-            Serial.println("== Client ACCESS DENIED ==");
+            Serial.println("\n== Client ACCESS DENIED ==");
             STATUS_CODE = 409;
           }
+          else{
+            Serial.println("\n== Client ACCESS GRANTED ==");
+            allowCallback = true;
+          }
       } else {
-        Serial.println("== CLIENT PARAM REFUSED ==");
+        Serial.println("\n== CLIENT PARAM REFUSED ==");
         for (int i=0; i<6; i++) {
           user.RIGHTS[i]=false;
           }
@@ -297,12 +301,17 @@ void setupServer(){
     bool message = true;
     int status = 200;
 
+    Serial.print("\n= USER REQUESTED CALLBACK ==>  ");
+
     if (request->hasParam(PARAM.CALLBACK, true) and allowCallback) {
           requestFlag = true;
           prepeareLog(request->getParam(PARAM.CALLBACK, true)->value());    
+          Serial.println("GRANTED");
       } else {
+         Serial.println("DENIED");
           message = false;
           status = 401;
+        Serial.print("PARAM failure");
       }
 
     request->send(status, "application/json", "{\"success\":\""+BoolToString(message)+"\"}");
@@ -323,7 +332,11 @@ void setupServer(){
   });  
 */
   server.on("/getdata", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, logResponse, String(), true);
+    Serial.print("\n == USER REQUESTED DATA ==");
+    Serial.println("GRANTED and SENT");
+
+    request->send(200, LittleFS, logResponse, true);
+
   }); 
 
   server.on("/pullconfig", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -358,7 +371,7 @@ bool checkUser(){
     return true;
   }
   else{
-    Serial.println("== USER idENT FAILURE ==");
+    Serial.println("\n == USER idENT FAILURE ==");
     return false;
   }
 }
