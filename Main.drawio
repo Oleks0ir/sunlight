@@ -748,9 +748,9 @@
         <mxCell id="8lYdBTWoBkf5rdqsNeMX-112" value="update RTC" style="whiteSpace=wrap;html=1;rounded=1;arcSize=14;strokeWidth=2;" parent="8lYdBTWoBkf5rdqsNeMX-17" vertex="1">
           <mxGeometry x="135" y="1040" width="120" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="8lYdBTWoBkf5rdqsNeMX-119" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="8lYdBTWoBkf5rdqsNeMX-17" source="8lYdBTWoBkf5rdqsNeMX-114" target="8lYdBTWoBkf5rdqsNeMX-122" edge="1">
+        <mxCell id="8lYdBTWoBkf5rdqsNeMX-119" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="8lYdBTWoBkf5rdqsNeMX-17" source="8lYdBTWoBkf5rdqsNeMX-114" edge="1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="574.4999999999998" y="1130" as="targetPoint" />
+            <mxPoint x="580" y="1180" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="8lYdBTWoBkf5rdqsNeMX-114" value="STAT_CODE=200" style="shape=parallelogram;html=1;strokeWidth=2;perimeter=parallelogramPerimeter;whiteSpace=wrap;rounded=1;arcSize=12;size=0.23;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="8lYdBTWoBkf5rdqsNeMX-17" vertex="1">
@@ -768,10 +768,10 @@
           <mxGeometry x="135" y="1110" width="120" height="40" as="geometry" />
         </mxCell>
         <mxCell id="8lYdBTWoBkf5rdqsNeMX-122" value="End Exchange" style="whiteSpace=wrap;html=1;rounded=1;arcSize=14;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#82b366;" parent="8lYdBTWoBkf5rdqsNeMX-17" vertex="1">
-          <mxGeometry x="574.5" y="1115" width="120" height="30" as="geometry" />
+          <mxGeometry x="574.5" y="1240" width="120" height="30" as="geometry" />
         </mxCell>
         <mxCell id="8lYdBTWoBkf5rdqsNeMX-123" value="End Exchange" style="whiteSpace=wrap;html=1;rounded=1;arcSize=14;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#82b366;" parent="8lYdBTWoBkf5rdqsNeMX-17" vertex="1">
-          <mxGeometry x="135" y="1200" width="120" height="30" as="geometry" />
+          <mxGeometry x="135" y="1240" width="120" height="30" as="geometry" />
         </mxCell>
         <mxCell id="hhi2isRYxz0fqXH9HFKf-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="8lYdBTWoBkf5rdqsNeMX-17" source="hhi2isRYxz0fqXH9HFKf-1" edge="1">
           <mxGeometry relative="1" as="geometry">
