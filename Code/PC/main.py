@@ -61,5 +61,14 @@ def main():
     requestLogs()
     print("====== TEST FINISHED ======")
 
+def calltime():
+    print("===TIME TEST STARTED===")
+    print(f"Device time reference: {Ltv}")
+    resp = req.post(url=IP + "current_time", data={"currentTime": Ltv})
+    display("Current time setup, POST", resp)
+    display("Fetch dataTime, GET", req.get(url=IP+"fetchTime"))
+    print("====== TEST FINISHED ======")
+
 if __name__ == "__main__":
-    main()
+    #main()
+    calltime()
