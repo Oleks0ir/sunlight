@@ -5,7 +5,7 @@ IP = "http://192.168.178.67/"
 
 Ltv = "2023-9-20 16:54:08"
 
-
+name = "Testlog.log"
 
 lastLog = -1
 
@@ -69,6 +69,20 @@ def calltime():
     display("Fetch dataTime, GET", req.get(url=IP+"fetchTime"))
     print("======TIME TEST FINISHED ======")
 
+def sendBigFile():
+    f = open(name, "r")
+    listed_f = f.readlines()
+
+    print(f'Gate opened: {req.post(url=IP + "openGate", data={"data": 1}).status_code}')
+
+    i=0
+    while i< len(listed_f):
+        print(f'Writing of {listed_f[i]} \n -> {req.post(url=IP + "dunkGate", data={"filename": "logDay.log", "line": str(listed_f[i])}).status_code}')
+        i+=1
+    
+
+
 if __name__ == "__main__":
-    main()
-    calltime()
+    #main()
+    #calltime()
+    sendBigFile()
