@@ -73,16 +73,23 @@ def sendBigFile():
     f = open(name, "r")
     listed_f = f.readlines()
 
-    print(f'Gate opened: {req.post(url=IP + "openGate", data={"data": 1}).status_code}')
+    print(f'\n ===Gate opened: {req.post(url=IP + "openGate", data={"data": 1}).status_code}')
 
     i=0
     while i< len(listed_f):
         print(f'Writing of {listed_f[i]} \n -> {req.post(url=IP + "dunkGate", data={"filename": "logDay.log", "line": str(listed_f[i])}).status_code}')
         i+=1
-    
+
+    print(f'\n ===Gate closed: {req.get(url=IP + "closeGate").status_code}')
+
 
 
 if __name__ == "__main__":
-    #main()
-    #calltime()
+    main()
+    mainTime = time.perf_counter()
+    calltime()
+    calltimeTime = time.perf_counter() - mainTime
     sendBigFile()
+    sendBigFileTime = time.perf_counter() - calltimeTime - mainTime
+    completeTime= time.perf_counter()
+    print(f"\n ==Execution time: {completeTime :.4f}s \n  >main(): {mainTime:.4f}s  ({mainTime*100/completeTime :.2f}%)\n  >calltime(): {calltimeTime :.4f}s  ({calltimeTime*100/completeTime :.2f}%)\n  >sendBigFile(): {sendBigFileTime :.4f}s ({sendBigFileTime*100/completeTime :.2f}%)")
