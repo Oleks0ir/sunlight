@@ -67,8 +67,8 @@ def calltime():
     resp = req.post(url=IP + "current_time", data={"currentTime": Ltv})
     display("Current time setup, POST", resp)
     display("Fetch dataTime, GET", req.get(url=IP+"fetchTime"))
-    print("====== TEST FINISHED ======")
+    print("======TIME TEST FINISHED ======")
 
 if __name__ == "__main__":
-    #main()
+    main()
     calltime()

@@ -4,10 +4,9 @@ Thus does not include logging, information saving, last-time-updated, measure/sl
 
 TODO:
   [◄] add user verification at /pullconfig
-  [◄] research file transmittion to ESP
   [◄] add config.json rewrite at /updateconfig
-  [◄] add collectLogData(){...}
-  [◄] add organizeNewData(){...}
+  [√] research file transmittion to ESP
+
 
   [◄] = alt +17
   [√] = alt + 251
@@ -31,9 +30,13 @@ TODO:
 #include "FS.h"
 #include <LittleFS.h>
 
+#include <Wire.h>
+#include <I2C_RTC.h>
+
 #define FORMAT_LITTLEFS_IF_FAILED true
 
 AsyncWebServer server(80);
+static DS3231 RTC;
 
 const char* filepar_name = "/config.json"; 
 
@@ -93,6 +96,7 @@ void setup() {
 
   LittleFS.begin();
   WiFi.mode(WIFI_STA);
+  RTC.begin();
 
   config = JsonConfig();
 
@@ -425,6 +429,35 @@ void setupServer(){
     }
   }); 
   
+  server.on("/current_time", HTTP_POST, [](AsyncWebServerRequest *request){
+    
+    int status = 200;
+    Serial.print("\n === USER REQUESTED TIME UPDATE ==> ");
+
+    if (request->hasParam(PARAM.currentTime, true)) {
+
+      Serial.print("ALLOWED");
+
+      String Time_str = request->getParam(PARAM.currentTime, true)->value();
+
+      char Time_char[Time_str.length() + 1];  // Allocate space for null terminator
+      Time_str.toCharArray(Time_char, sizeof(Time_char));
+
+
+      updateTime(Time_char);
+          
+    } else {
+      status = 401;
+    }
+
+    request->send(status);
+  });
+
+  server.on("/fetchTime", HTTP_GET, [](AsyncWebServerRequest *request){
+    String response = "";
+    response = String(RTC.getYear())+"-"+String(RTC.getMonth())+"-"+String(RTC.getDay())+" "+String(RTC.getHours())+":"+String(RTC.getMinutes())+":"+String(RTC.getSeconds());
+    request->send(200, "text/plain", response);
+  });
 
 
   server.on("/pullconfig", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -504,4 +537,35 @@ void finishConnectionSession(){
 inline String BoolToString(bool b)
 {
   return b ? "true" : "false";
+}
+
+void updateTime(const char* StringTime){
+  Serial.print("\n User Time: ");
+  Serial.print(StringTime);
+  tmElements_t Time = createElements(StringTime);
+  
+  RTC.setDate(Time.Day, Time.Month,Time.Year+1970);
+  RTC.setTime(Time.Hour,Time.Minute,Time.Second);
+
+  Serial.print("\n Time updated: ");
+  printTime();
+
+}
+
+void printTime(){
+  Serial.print(" ");
+  Serial.print(RTC.getYear());
+  Serial.print("-");
+  Serial.print(RTC.getMonth());
+  Serial.print("-");
+  Serial.print(RTC.getDay());
+
+  Serial.print(" ");
+
+  Serial.print(RTC.getHours());
+  Serial.print(":");
+  Serial.print(RTC.getMinutes());
+  Serial.print(":");
+  Serial.print(RTC.getSeconds());
+  Serial.println(" ");
 }
