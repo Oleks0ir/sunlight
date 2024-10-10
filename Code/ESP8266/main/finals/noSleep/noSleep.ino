@@ -43,7 +43,7 @@ const char* logMonth = "/log/logMonth.log";
 const char* logYear = "/log/logYear.log";
 const char* logInfo = "/log/logInfo.json";
 
-const char* logResponse = "/log/logResponse.log";
+const char* logResponse = "/log/logResp.log";
 
 int Year, Month, Day, Hour, Minute, Second;
 tmElements_t tm;
@@ -51,9 +51,17 @@ tmElements_t tm;
 JsonDocument config;
 
 int stoppedOnNetwork = 0;
+int lastLog = 0;
 int WAIT_FOR_CONNECTION; //not implemented in noSleep
 bool requestFlag = false;
 bool allowCallback = false;
+
+String lastRespLogList[4] = {
+  "logDay",
+  "logWeek",
+  "logMonth",
+  "logYear"
+};
 
 struct{
   const char* PARAM_MESSAGE = "message";
@@ -124,6 +132,8 @@ JsonDocument JsonConfig(){
 }
 
 JsonDocument logInfoToJson(){
+  Serial.print("\n => Accesing logInfo ");
+  
   File file = LittleFS.open(logInfo, "r");
   String JsonSerial = "";
   JsonDocument FullJson;
@@ -131,7 +141,7 @@ JsonDocument logInfoToJson(){
   if(!file || file.isDirectory()){
         Serial.println("- failed to open logInfo.json for reading");
     }
-  Serial.print("- reading logInfo ==>");
+  Serial.print(" - reading logInfo ==>");
     while(file.available()){
       JsonSerial += file.readString();
     }
@@ -143,40 +153,42 @@ JsonDocument logInfoToJson(){
 
 }
 
-bool TimeDiff(String a_str, String b_str){
-// result false when a earlyer then b, true when a later then b
-  char a_char[a_str.length()];
-  a_str.toCharArray(a_char, a_str.length());
-  char b_char[b_str.length()];
-  b_str.toCharArray(b_char, b_str.length());
+bool TimeDiff(String a_str, String b_str) {
+  // result false when a earlier than b, true when a later than b
+  char a_char[a_str.length() + 1];  // Allocate space for null terminator
+  a_str.toCharArray(a_char, sizeof(a_char));
+  char b_char[b_str.length() + 1];  // Allocate space for null terminator
+  b_str.toCharArray(b_char, sizeof(b_char));
 
-  createElements(a_char);
-  unsigned long a = makeTime(tm);
-  createElements(b_char);
-  unsigned long b = makeTime(tm);
+  tmElements_t tm_a = createElements(a_char);
+  unsigned long a = makeTime(tm_a);
+  
+  tmElements_t tm_b = createElements(b_char);
+  unsigned long b = makeTime(tm_b);
 
-  if(a-b<0){
-    return false;
-  }else{
-    return true;
-  }
+  return a > b;  // Return true if a is later than b
 }
 
 int selectFiles(String lastTimeVisitString){
-  int lastRespLog = 0;
-  JsonDocument logInfoJson = logInfoToJson();
-
+  
+  int lastRespLog = -1;
+  JsonDocument logInfoJson_n = logInfoToJson();
+    Serial.print("\n => Data selection");
+  
   for(lastRespLog; lastRespLog<4; lastRespLog++){
-    if(TimeDiff(lastTimeVisitString, logInfoJson[lastRespLog].as<String>())){
+    if(TimeDiff(lastTimeVisitString, logInfoJson_n[lastRespLogList[lastRespLog]][1]["timespan"].as<String>())){
+      
       break;
     }
   }
+    Serial.print(" - selected from > ");
+    Serial.print(lastRespLog);
 
     return lastRespLog;
   
 }
 
-tmElements_t createElements(const char* str){
+tmElements_t createElements(const char* str) {
   sscanf(str, "%d-%d-%d %d:%d:%d", &Year, &Month, &Day, &Hour, &Minute, &Second);
 
   tm.Year = CalendarYrToTm(Year);
@@ -304,17 +316,31 @@ void setupServer(){
     Serial.print("\n= USER REQUESTED CALLBACK ==>  ");
 
     if (request->hasParam(PARAM.CALLBACK, true) and allowCallback) {
-          requestFlag = true;
-          prepeareLog(request->getParam(PARAM.CALLBACK, true)->value());    
           Serial.println("GRANTED");
-      } else {
+          requestFlag = true;
+          lastLog = searchlastlog(request->getParam(PARAM.CALLBACK, true)->value());
+          Serial.print("\n== CALLBACK SESSION ENDED ==");   
+      
+      } else if (request->hasParam(PARAM.CALLBACK, true) != true){
          Serial.println("DENIED");
-          message = false;
+          lastLog = -1;
           status = 401;
         Serial.print("PARAM failure");
       }
+      else if (!allowCallback){
+        Serial.println("DENIED");
+          lastLog = -1;
+          status = 401;
+        Serial.print("CALLBACK not allowed");
+      }
+      else{
+        Serial.println("DENIED");
+          lastLog = -1;
+          status = 401;
+        Serial.print("UNKNOWN FAILURE");
+      }
 
-    request->send(status, "application/json", "{\"success\":\""+BoolToString(message)+"\"}");
+    request->send(status, "application/json", "{\"lastLog\":\""+String(lastLog)+"\"}");
   });  
 /*
   server.on("/setcallback", HTTP_POST, [](AsyncWebServerRequest *request){
@@ -331,19 +357,95 @@ void setupServer(){
     request->send(status, "application/json", "{\"success\":\""+BoolToString(message)+"\"}");
   });  
 */
-  server.on("/getdata", HTTP_GET, [](AsyncWebServerRequest *request){
-    Serial.print("\n == USER REQUESTED DATA ==");
-    Serial.println("GRANTED and SENT");
+  server.on("/getDay", HTTP_GET, [](AsyncWebServerRequest *request){
+    Serial.print("\n == USER REQUESTED LOG DATA DAY==> ");
+    if (lastLog >=0 && requestFlag){
+      Serial.println("GRANTED and SENT");
+      request->send(LittleFS, logDay, String(), true);
+    }else if(!requestFlag){
+      Serial.println("DENIED: CALLBACK REQ DENIED");
+      request->send(401, "text/plain", "NO REQUEST SUCCEEDED");
+    }else if(lastLog==-1){
+      Serial.println("DENIED: LOG DENIAL");
+      request->send(401, "text/plain", "LOG DENIAL");
+    } else {
+      Serial.println("DENIED: UNKMOWN FAILURE");
+      request->send(401, "text/plain", "UNKNOWN ERROR");
+    }
+  });
 
-    request->send(200, LittleFS, logResponse, true);
-
+  server.on("/getWeek", HTTP_GET, [](AsyncWebServerRequest *request){
+    Serial.print("\n == USER REQUESTED LOG DATA WEEK==> ");
+    if (lastLog >=1 && requestFlag){
+      Serial.println("GRANTED and SENT");
+      request->send(LittleFS, logWeek, String(), true);
+    }else if(!requestFlag){
+      Serial.println("DENIED: CALLBACK REQ DENIED");
+      request->send(401, "text/plain", "NO REQUEST SUCCEEDED");
+    }else if(lastLog<1){
+      Serial.println("DENIED: LOG DENIAL");
+      request->send(401, "text/plain", "LOG EXCEEDED");
+    } else {
+      Serial.println("DENIED: UNKMOWN FAILURE");
+      request->send(401, "text/plain", "UNKNOWN ERROR");
+    }
   }); 
+  
+  server.on("/getMonth", HTTP_GET, [](AsyncWebServerRequest *request){
+    Serial.print("\n == USER REQUESTED LOG DATA MONTH==> ");
+    if (lastLog >=2 && requestFlag){
+      Serial.println("GRANTED and SENT");
+      request->send(LittleFS, logMonth, String(), true);
+    }else if(!requestFlag){
+      Serial.println("DENIED: CALLBACK REQ DENIED");
+      request->send(401, "text/plain", "NO REQUEST SUCCEEDED");
+    }else if(lastLog<2){
+      Serial.println("DENIED: LOG DENIAL");
+      request->send(401, "text/plain", "LOG EXCEEDED");
+    }else {
+      Serial.println("DENIED: UNKMOWN FAILURE");
+      request->send(401, "text/plain", "UNKNOWN ERROR");
+    }
+  }); 
+  
+  server.on("/getYear", HTTP_GET, [](AsyncWebServerRequest *request){
+    Serial.print("\n == USER REQUESTED LOG DATA YEAR==> ");
+    if (lastLog >=3 && requestFlag){
+      Serial.println("GRANTED and SENT");
+      request->send(LittleFS, logYear, String(), true);
+    }else if(!requestFlag){
+      Serial.println("DENIED: CALLBACK REQ DENIED");
+      request->send(401, "text/plain", "NO REQUEST SUCCEEDED");
+    }else if(lastLog<3){
+      Serial.println("DENIED: LOG DENIAL");
+      request->send(401, "text/plain", "LOG EXCEEDED");
+    } else {
+      Serial.println("DENIED: UNKMOWN FAILURE");
+      request->send(401, "text/plain", "UNKNOWN ERROR");
+    }
+  }); 
+  
+
 
   server.on("/pullconfig", HTTP_GET, [](AsyncWebServerRequest *request){
+        Serial.print("\n == USER REQUESTED CONFIG ==> ");
+    
     if(request->hasParam(PARAM.id, true)){
+      Serial.println("GRANTED and SENT");
       //--------------------------------------------------------------------------------------------------
       request->send(LittleFS, filepar_name, String(), true);
+
+    } else if(request->hasParam(PARAM.id, true)){
+      Serial.println("DENIED \n PARAM Failure");
+      //--------------------------------------------------------------------------------------------------
+      request->send(401);
+    } else {
+      Serial.println("DENIED \n Unknown failure");
+      //--------------------------------------------------------------------------------------------------
+      request->send(401);
     }
+
+
   }); 
 
   server.on("/updateconfig", HTTP_POST, [](AsyncWebServerRequest *request){
@@ -376,31 +478,17 @@ bool checkUser(){
   }
 }
 
-void composeResponse(int lastRespLog){
-  const char* LogFiles[] = {logDay, logWeek, logMonth, logYear};
-  String lines;
-  File file;
+
+
+int searchlastlog(String lastTimeVisit){
+  Serial.print("\n+++ FILE PREPARATION");
+  Serial.print("\n  => LTV =");
+  Serial.print(lastTimeVisit);
   
-  for(int i = 0; i<=lastRespLog; i++){
-    file = LittleFS.open(LogFiles[i], "r");
-
-    while(file.available()){
-      lines = file.readStringUntil('\n');
-      file.close();
-      file = LittleFS.open(logResponse, "a");
-      file.println(lines);
-      file.close();
-      file = LittleFS.open(LogFiles[i], "r");
-    }
-    file.close();
-    
-  }
-}
-
-void prepeareLog(String lastTimeVisit){
   int selectedFiles = selectFiles(lastTimeVisit);
-  composeResponse(selectedFiles);
-    
+  
+  Serial.print("\n+++ FILES FOUND");
+  return selectedFiles;
 }
 
 void failureBlink(){
