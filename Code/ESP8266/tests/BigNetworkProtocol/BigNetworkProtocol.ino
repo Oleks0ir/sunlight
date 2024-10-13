@@ -23,7 +23,7 @@
 #define pin1 4
 #define pin2 5
 
-int collected_data[4];
+int collected_data[4]={0,0,0,0};
 
 
 AsyncWebServer server(80);
@@ -55,7 +55,7 @@ void setup() {
   // put your setup code here, to run once:
     Serial.begin(115200);
     
-    pinMode(Vin, INPUT);
+    
     pinMode(pin1, OUTPUT);
     pinMode(pin2, OUTPUT);
 
@@ -122,10 +122,14 @@ void setMultiplexer(int adress = 0){
 }
 
 void updateData(){
-  for (int i=0; i<=2; i++) {
+  int Voltage = 0;
+  for (int i=0; i<=3; i++) {
     setMultiplexer(i);
-    collected_data[i] = analogRead(Vin);
+    Voltage = analogRead(Vin);
+    collected_data[i] = Voltage;
+    Serial.print(String(i)+" > "+ String(Voltage)+" | ");
   }
+  Serial.print("\n######\n");
   setMultiplexer(0);
 }
 
