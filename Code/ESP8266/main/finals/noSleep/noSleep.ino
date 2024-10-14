@@ -4,10 +4,9 @@ Thus does not include logging, information saving, last-time-updated, measure/sl
 
 TODO:
   [◄] add user verification at /pullconfig
-  [◄] research file transmittion to ESP
   [◄] add config.json rewrite at /updateconfig
-  [◄] add collectLogData(){...}
-  [◄] add organizeNewData(){...}
+  [√] research file transmittion to ESP
+
 
   [◄] = alt +17
   [√] = alt + 251
@@ -31,9 +30,13 @@ TODO:
 #include "FS.h"
 #include <LittleFS.h>
 
+#include <Wire.h>
+#include <I2C_RTC.h>
+
 #define FORMAT_LITTLEFS_IF_FAILED true
 
 AsyncWebServer server(80);
+static DS3231 RTC;
 
 const char* filepar_name = "/config.json"; 
 
@@ -55,6 +58,7 @@ int lastLog = 0;
 int WAIT_FOR_CONNECTION; //not implemented in noSleep
 bool requestFlag = false;
 bool allowCallback = false;
+bool FilegateOpen = false;
 
 String lastRespLogList[4] = {
   "logDay",
@@ -93,6 +97,7 @@ void setup() {
 
   LittleFS.begin();
   WiFi.mode(WIFI_STA);
+  RTC.begin();
 
   config = JsonConfig();
 
@@ -425,6 +430,35 @@ void setupServer(){
     }
   }); 
   
+  server.on("/current_time", HTTP_POST, [](AsyncWebServerRequest *request){
+    
+    int status = 200;
+    Serial.print("\n === USER REQUESTED TIME UPDATE ==> ");
+
+    if (request->hasParam(PARAM.currentTime, true)) {
+
+      Serial.print("ALLOWED");
+
+      String Time_str = request->getParam(PARAM.currentTime, true)->value();
+
+      char Time_char[Time_str.length() + 1];  // Allocate space for null terminator
+      Time_str.toCharArray(Time_char, sizeof(Time_char));
+
+
+      updateTime(Time_char);
+          
+    } else {
+      status = 401;
+    }
+
+    request->send(status);
+  });
+
+  server.on("/fetchTime", HTTP_GET, [](AsyncWebServerRequest *request){
+    String response = "";
+    response = String(RTC.getYear())+"-"+String(RTC.getMonth())+"-"+String(RTC.getDay())+" "+String(RTC.getHours())+":"+String(RTC.getMinutes())+":"+String(RTC.getSeconds());
+    request->send(200, "text/plain", response);
+  });
 
 
   server.on("/pullconfig", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -448,10 +482,48 @@ void setupServer(){
 
   }); 
 
+  server.on("/openGate", HTTP_POST,  [](AsyncWebServerRequest *request){
+    int status = 401;
+
+    Serial.print("\n === USER HAS REQUESTED GATE OPENING ==> ");
+    if (request->hasParam("data", true)) {
+      status = 200;
+      FilegateOpen = true;
+      Serial.print("GRANTED\n");
+      String req=request->getParam("data", true)->value();
+      wipeFiles(req.toInt());
+    }else{Serial.print("DENIED");}
+
+    request->send(status);
+  });
+  
+  server.on("/dunkGate", HTTP_POST,  [](AsyncWebServerRequest *request){
+    int status = 401;
+
+    Serial.print("\n === USER DUNKS GATE ==> ");
+
+    if (request->hasParam("filename", true) && request->hasParam("line", true) && FilegateOpen) {
+      status = 200;
+      Serial.print("GRANTED\n");
+
+      writeToFile(request->getParam("filename", true)->value(), request->getParam("line", true)->value());
+
+    } else if(FilegateOpen){Serial.print("DENIED ON PARAM INCOMPLETE\n");
+    } else {Serial.print("DENIED ON CLOSED GATE\n");}
+
+    request->send(status);
+  });
+
+  server.on("/closeGate", HTTP_GET, [](AsyncWebServerRequest *request){
+    FilegateOpen = false;
+    request->send(200);
+  });
+  
   server.on("/updateconfig", HTTP_POST, [](AsyncWebServerRequest *request){
 
     request->send(200, "text/plain", "none");
   });  
+
 
   server.onNotFound(notFound);
 
@@ -504,4 +576,101 @@ void finishConnectionSession(){
 inline String BoolToString(bool b)
 {
   return b ? "true" : "false";
+}
+
+void updateTime(const char* StringTime){
+  Serial.print("\n User Time: ");
+  Serial.print(StringTime);
+  tmElements_t Time = createElements(StringTime);
+  
+  RTC.setDate(Time.Day, Time.Month,Time.Year+1970);
+  RTC.setTime(Time.Hour,Time.Minute,Time.Second);
+
+  Serial.print("\n Time updated: ");
+  printTime();
+
+}
+
+void printTime(){
+  Serial.print(" ");
+  Serial.print(RTC.getYear());
+  Serial.print("-");
+  Serial.print(RTC.getMonth());
+  Serial.print("-");
+  Serial.print(RTC.getDay());
+
+  Serial.print(" ");
+
+  Serial.print(RTC.getHours());
+  Serial.print(":");
+  Serial.print(RTC.getMinutes());
+  Serial.print(":");
+  Serial.print(RTC.getSeconds());
+  Serial.println(" ");
+}
+
+void writeToFile(String filename, String line){
+  String path = "/log/"+filename;
+  File file;
+  bool fileExists = LittleFS.exists(path);
+
+  if(fileExists){
+    file = LittleFS.open(path, "a");
+    Serial.print("\n Appending file with line: \""+line+"\" \n Result -> ");
+    
+    if (file.print(line)) {
+      Serial.println("Message appended");
+    } else {
+      Serial.println("Append failed");
+    }  
+  } else{
+    file = LittleFS.open(path, "w");
+    Serial.print("\n<> Creating file with line: \""+line+"\" \n Result -> ");
+
+    if (!file) {
+      Serial.println("Failed to open file for writing");
+      return;
+    }
+    if (file.print(line)) {
+      Serial.println("File written");
+    } else {
+      Serial.println("Write failed");
+    }
+
+  }
+  file.close();
+
+}
+
+void wipeFiles(int upTo){
+  Serial.println("WIPING FILES");
+  String wipePath;
+  
+  if (upTo>=0){
+  for(int i = 0; i<=upTo; i++){
+    wipePath = "/log/"+lastRespLogList[i]+".log";
+    if (LittleFS.remove(wipePath)) {
+      Serial.println(" - "+wipePath+" deleted");
+      continue;
+    } else {
+      Serial.println("###"+wipePath+" delete failed");
+    }
+  }
+
+  if (LittleFS.remove("/log/logInfo.json")) {
+      Serial.println(" - /log/logInfo.json deleted");
+    } else {
+      Serial.println("###/log/logInfo.json delete failed");
+    }
+  }else if(upTo = -1){
+    if (LittleFS.remove("/config.json")) {
+      Serial.println(" - /config.json deleted");
+    } else {
+      Serial.println("###/config.json delete failed");
+    }
+  } else{
+    Serial.println("FILE OUT OF BOUNDS");
+  }
+
+
 }
