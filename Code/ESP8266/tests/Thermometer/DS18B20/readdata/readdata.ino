@@ -5,6 +5,7 @@
 
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#define Mult1 5
 
 // GPIO where the DS18B20 is connected to
 const int oneWireBus = 4;     
@@ -23,12 +24,13 @@ void setup() {
 }
 
 void loop() {
+
+
   sensors.requestTemperatures(); 
   float temperatureC = sensors.getTempCByIndex(0);
-  float temperatureF = sensors.getTempFByIndex(0);
+
   Serial.print(temperatureC);
   Serial.println("ºC");
-  Serial.print(temperatureF);
-  Serial.print("ºF\n\n");
+
   delay(5000);
 }
