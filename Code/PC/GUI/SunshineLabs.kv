@@ -1,0 +1,85 @@
+MainLayout:
+
+<MainLayout@GridLayout>:
+    cols:2
+    padding: "10dp"
+
+    Widget_Monocristaline_Power:
+    Widget_Polycristaline_Power:
+    Widget_Temperature:
+    Widget_VoltAmpers:
+
+<Widget_Monocristaline_Power>:
+    size_hint: 0.5, 1
+
+    AnchorLayout:
+        anchor_x: "center"
+        anchor_y: "top"
+        Button:
+            size_hint: .3, .1
+            text: "Monocristaline"
+
+    RelativeLayout:
+        BoxLayout:
+            VoltageGraph_Monocristaline:
+                size_hint: None, None
+                width: dp(1000)
+                height: dp(200)
+
+
+
+
+
+<Widget_Polycristaline_Power@AnchorLayout>:
+    size_hint: 0.5, 1
+
+    AnchorLayout:
+        anchor_x: "center"
+        anchor_y: "top"
+        Button:
+            size_hint: .3, .1
+            text: "Polycristaline"
+
+    RelativeLayout:
+        ScrollView:
+            orientation: "horizontal"
+            size_hint: (0.7, 0.8)
+            do_scroll_x: True
+            do_scroll_y: False
+            pos_hint: {"center_x": .5, "y": 0}
+
+            VoltageGraph_Polycristaline:
+                size_hint: None, None
+                width: dp(1000)
+                height: dp(200)
+
+
+
+<Widget_Temperature@AnchorLayout>:
+    size_hint: 0.5, 1
+
+    AnchorLayout:
+        anchor_x: "center"
+        anchor_y: "top"
+        Button:
+            size_hint: .3, .1
+            text: "Temperature"
+
+
+<Widget_VoltAmpers@AnchorLayout>:
+    size_hint: 0.5, 1
+
+    AnchorLayout:
+        anchor_x: "center"
+        anchor_y: "top"
+        Button:
+            size_hint: .3, .1
+            text: "Volt-Ampere"
+
+    AnchorLayout:
+        anchor_x: "center"
+        anchor_y: "bottom"
+        Button:
+            size_hint: .3, .1
+            text: "Test"
+

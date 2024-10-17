@@ -58,6 +58,7 @@ int lastLog = 0;
 int WAIT_FOR_CONNECTION; //not implemented in noSleep
 bool requestFlag = false;
 bool allowCallback = false;
+bool FilegateOpen = false;
 
 String lastRespLogList[4] = {
   "logDay",
@@ -481,10 +482,48 @@ void setupServer(){
 
   }); 
 
+  server.on("/openGate", HTTP_POST,  [](AsyncWebServerRequest *request){
+    int status = 401;
+
+    Serial.print("\n === USER HAS REQUESTED GATE OPENING ==> ");
+    if (request->hasParam("data", true)) {
+      status = 200;
+      FilegateOpen = true;
+      Serial.print("GRANTED\n");
+      String req=request->getParam("data", true)->value();
+      wipeFiles(req.toInt());
+    }else{Serial.print("DENIED");}
+
+    request->send(status);
+  });
+  
+  server.on("/dunkGate", HTTP_POST,  [](AsyncWebServerRequest *request){
+    int status = 401;
+
+    Serial.print("\n === USER DUNKS GATE ==> ");
+
+    if (request->hasParam("filename", true) && request->hasParam("line", true) && FilegateOpen) {
+      status = 200;
+      Serial.print("GRANTED\n");
+
+      writeToFile(request->getParam("filename", true)->value(), request->getParam("line", true)->value());
+
+    } else if(FilegateOpen){Serial.print("DENIED ON PARAM INCOMPLETE\n");
+    } else {Serial.print("DENIED ON CLOSED GATE\n");}
+
+    request->send(status);
+  });
+
+  server.on("/closeGate", HTTP_GET, [](AsyncWebServerRequest *request){
+    FilegateOpen = false;
+    request->send(200);
+  });
+  
   server.on("/updateconfig", HTTP_POST, [](AsyncWebServerRequest *request){
 
     request->send(200, "text/plain", "none");
   });  
+
 
   server.onNotFound(notFound);
 
@@ -568,4 +607,70 @@ void printTime(){
   Serial.print(":");
   Serial.print(RTC.getSeconds());
   Serial.println(" ");
+}
+
+void writeToFile(String filename, String line){
+  String path = "/log/"+filename;
+  File file;
+  bool fileExists = LittleFS.exists(path);
+
+  if(fileExists){
+    file = LittleFS.open(path, "a");
+    Serial.print("\n Appending file with line: \""+line+"\" \n Result -> ");
+    
+    if (file.print(line)) {
+      Serial.println("Message appended");
+    } else {
+      Serial.println("Append failed");
+    }  
+  } else{
+    file = LittleFS.open(path, "w");
+    Serial.print("\n<> Creating file with line: \""+line+"\" \n Result -> ");
+
+    if (!file) {
+      Serial.println("Failed to open file for writing");
+      return;
+    }
+    if (file.print(line)) {
+      Serial.println("File written");
+    } else {
+      Serial.println("Write failed");
+    }
+
+  }
+  file.close();
+
+}
+
+void wipeFiles(int upTo){
+  Serial.println("WIPING FILES");
+  String wipePath;
+  
+  if (upTo>=0){
+  for(int i = 0; i<=upTo; i++){
+    wipePath = "/log/"+lastRespLogList[i]+".log";
+    if (LittleFS.remove(wipePath)) {
+      Serial.println(" - "+wipePath+" deleted");
+      continue;
+    } else {
+      Serial.println("###"+wipePath+" delete failed");
+    }
+  }
+
+  if (LittleFS.remove("/log/logInfo.json")) {
+      Serial.println(" - /log/logInfo.json deleted");
+    } else {
+      Serial.println("###/log/logInfo.json delete failed");
+    }
+  }else if(upTo = -1){
+    if (LittleFS.remove("/config.json")) {
+      Serial.println(" - /config.json deleted");
+    } else {
+      Serial.println("###/config.json delete failed");
+    }
+  } else{
+    Serial.println("FILE OUT OF BOUNDS");
+  }
+
+
 }
