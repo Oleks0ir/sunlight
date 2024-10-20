@@ -5,7 +5,7 @@ IP = "http://192.168.178.67/"
 
 Ltv = "2023-9-20 16:54:08"
 
-name = "Testlog.log"
+name = "TestlogR.log"
 
 lastLog = -1
 

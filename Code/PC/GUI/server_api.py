@@ -2,7 +2,7 @@ import requests as req
 import time
 
 lastLog = -1
-name = "Testlog.log"
+name = "TestlogR.log"
 
 
 def formattime(time):
@@ -13,12 +13,12 @@ def returnPoints():
 
 
 class server():
-    def __init__(self, IP, host_id, host, password):
+    def __init__(self, IP, host_id, host, password, LtV):
         self.IP = IP + "/"
         self.id = host_id
         self.host = host
         self.password = password
-        self.Ltv = "2020-09-21 17:07:11"
+        self.Ltv = LtV
         self.callbackData = {
                 "ID": host_id,
                 "HOST": host,
@@ -46,8 +46,8 @@ class server():
         self.display("Fetch dataTime, GET", req.get(url=self.IP + "fetchTime"))
         print("======TIME TEST FINISHED ======")
 
-    def sendBigFile(self):
-        f = open(self.name, "r")
+    def sendBigFile(self, path):
+        f = open(path, "r")
         listed_f = f.readlines()
 
         print(f'\n ===Gate opened: {req.post(url=self.IP + "openGate", data={"data": 1}).status_code}')
