@@ -24,7 +24,7 @@ class server():
                 "HOST": host,
                 "PASSWORD": password
             }
-        self.isOnline = self.ping()
+        self.isOnline = False
         self.files_recieved = False
         self.logsrecieved= []
 

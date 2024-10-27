@@ -86,22 +86,33 @@ def forceReadVoltage():
     resp = req.get(url=IP + "forceReadVoltage")
     display("Force Read Voltage, GET", resp)
 
+def forceReadTemp():
+    resp = req.get(url=IP + "forceReadTemp")
+    display("Force Read Temp, GET", resp)
+
 def forceUpdateLog():
     resp = req.get(url=IP + "forceUpdateLog")
     display("Force Read Voltage, GET", resp)
 
 
 if __name__ == "__main__":
-    """main()
+    main()
     mainTime = time.perf_counter()
     calltime()
     calltimeTime = time.perf_counter() - mainTime
-    sendBigFile()
+    #sendBigFile()
     sendBigFileTime = time.perf_counter() - calltimeTime - mainTime
     completeTime= time.perf_counter()
+
+
     print(f"\n ==Execution time: {completeTime :.4f}s \n  >main(): {mainTime:.4f}s  ({mainTime*100/completeTime :.2f}%)\n  >calltime(): {calltimeTime :.4f}s  ({calltimeTime*100/completeTime :.2f}%)\n  >sendBigFile(): {sendBigFileTime :.4f}s ({sendBigFileTime*100/completeTime :.2f}%)")
-"""
-    forceReadVoltage()
+
+    #calltime()
+    #forceReadVoltage()
+
+    #forceReadTemp()
+    forceUpdateLog()
+    forceUpdateLog()
     forceUpdateLog()
 
 

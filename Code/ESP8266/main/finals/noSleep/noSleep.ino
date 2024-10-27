@@ -48,6 +48,11 @@ TODO:
 #define Switch 14 //D5  MOSFET control pin (V_MES on Scheme) 
 // Switches between Open Curcuit an ~1kOm Resistor 
 
+#define Testled 12
+
+unsigned long previousMillis = 0;  // Store last time LED was updated
+const long blinkInterval = 1000;  
+
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #define Mult1 5
@@ -86,6 +91,7 @@ int WAIT_FOR_CONNECTION; //not implemented in noSleep
 bool requestFlag = false;
 bool allowCallback = false;
 bool FilegateOpen = false;
+bool ledState = LOW;    // Variable to store LED state
 
 String lastRespLogList[4] = {
   "logDay",
@@ -139,6 +145,10 @@ void setup() {
   RTC.begin();
   sensors.begin();
   pinMode(Switch, OUTPUT);
+  pinMode(Testled, OUTPUT);
+
+  digitalWrite(Switch, LOW);
+  digitalWrite(Testled, LOW);
 
   config = JsonConfig();
 
@@ -167,9 +177,24 @@ void setup() {
   display.display();
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
 
+
+void loop() {
+ // Non-blocking LED Blink
+  unsigned long currentMillis = millis();  // Get current time
+  if (currentMillis - previousMillis >= config["statics"][0]["timers"][0]["MEASURE_STEP"].as<int>()*1000) {
+    previousMillis = currentMillis;       // Update the last time the LED was toggled
+    ledState = !ledState;                 // Toggle LED state
+    updateLog();
+    if(ledState){
+      digitalWrite(Testled, HIGH);   
+    }    // Set LED to new state
+    else{
+      digitalWrite(Testled, LOW);   
+    }
+    Serial.println(ledState ? "LED ON" : "LED OFF");
+  }
+  yield();
 }
 
 JsonDocument JsonConfig(){
@@ -605,6 +630,13 @@ void setupServer(){
     request->send(200, "application/json", "{\"voltage\":["+response+"]}");
   });
 
+  server.on("/forceReadTemp", HTTP_GET, [](AsyncWebServerRequest *request){
+
+    String response = "[" +Get_hexTemp()+"]";
+
+    request->send(200, "application/json", "{\"temperature\":["+response+"]}");
+  });
+
   server.on("/forceUpdateLog", HTTP_GET, [](AsyncWebServerRequest *request){
     
     String resp = updateLog();
@@ -767,7 +799,7 @@ String updateLog(){
 
   Serial.print("\n line created. Writing line: \n");
   
-  writeToFile("logDay", line);
+  writeToFile("logDay.log", line);
   
   return line;
 }
@@ -777,7 +809,7 @@ String readVoc(){
   digitalWrite(Switch, LOW);
   delay(100);
   value = analogRead(A0);
-  Serial.print("\nVoltage OC  = " + String(value, HEX) + " | " + String(value*3.22265/1000) + "V");
+  Serial.print("\nVoltage OC  = " + String(value, HEX) + " | " + String(value*3.22265/1000) + "V\n");
   //Serial.println((int)(value*100));
   return String((int)(value), HEX);
 }
@@ -787,15 +819,16 @@ String readV_lowRes(){
   digitalWrite(Switch, HIGH);
   delay(5);
   value = analogRead(A0);
-  Serial.print("\nVoltage LRES = " + String(value, HEX) + " | " + String(value*3.22265) + " mV");
+  Serial.print("\nVoltage LRES = " + String(value, HEX) + " | " + String(value*3.22265) + " mV\n");
   //Serial.println((int)(value*100));
   return String((int)(value), HEX);
 }
 
 String Get_hexTemp(){
-  sensors.requestTemperatures(); 
+  /*sensors.requestTemperatures(); 
   float temperatureC = sensors.getTempCByIndex(0);
   float value = temperatureC;
   Serial.println((int)(value*100));
-  return String((int)(value*100), HEX);
+  return String((int)(value*100), HEX);*/
+  return "96c";
 }
