@@ -56,7 +56,7 @@
     "statics":[
         {
             "timers":[
-                {"MEASURE_STEP":59},
+                {"MEASURE_STEP":60},
                 {"WAIT_FOR_CONNECTION":11},
                 {"NETWORK_STEP":29}
             ],

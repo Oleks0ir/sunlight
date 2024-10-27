@@ -10,7 +10,7 @@ import mathEngine as mthen
 
 
 
-#esp = server.server(IP="http://192.168.178.67", host_id="0", host="admin", password="admin", LtV = "2020-09-21 17:07:11")
+esp = server.server(IP="http://192.168.178.68", host_id="0", host="admin", password="admin", LtV = "2020-09-21 17:07:11")
 
 class SunshineLabsApp(App):
     pass
@@ -65,6 +65,13 @@ class VoltageGraph_Monocristaline(Widget):
                 Color(1, 1, 1)
                 Rectangle(size=(15, self.adaptedHigh[i]), pos=(dp(50)+(self.colLen + self.spacing)*i, baseY))
 
+class Widget_VoltAmpers(AnchorLayout):
+
+    def sendDate(self, time):
+        esp.Ltv = time.text
+        esp.calltime()
+        pass
+
 
 class VoltageGraph_Polycristaline(Widget):
     def __init__(self, **kwargs):
@@ -90,5 +97,6 @@ class VoltageGraph_Polycristaline(Widget):
             with self.canvas:
                 Color(1, 1, 1)
                 Rectangle(size=(15, self.adaptedHigh[i]), pos=(dp(30) + (self.colLen + self.spacing) * i, baseY))
+
 
 SunshineLabsApp().run()
