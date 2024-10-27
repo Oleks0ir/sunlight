@@ -31,12 +31,37 @@ TODO:
 #include <LittleFS.h>
 
 #include <Wire.h>
+#include <SPI.h>
+
 #include <I2C_RTC.h>
+
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
 #define FORMAT_LITTLEFS_IF_FAILED true
 
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
+#define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
+
+#define Switch 14 //D5  MOSFET control pin (V_MES on Scheme) 
+// Switches between Open Curcuit an ~1kOm Resistor 
+
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#define Mult1 5
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 AsyncWebServer server(80);
 static DS3231 RTC;
+
+// GPIO where the DS18B20 is connected to
+const int oneWireBus = 2;  
+OneWire oneWire(oneWireBus);
+
+// Pass our oneWire reference to Dallas Temperature sensor 
+DallasTemperature sensors(&oneWire);
 
 const char* filepar_name = "/config.json"; 
 
@@ -52,6 +77,8 @@ int Year, Month, Day, Hour, Minute, Second;
 tmElements_t tm;
 
 JsonDocument config;
+
+bool networkSuccessefull = true;
 
 int stoppedOnNetwork = 0;
 int lastLog = 0;
@@ -94,23 +121,50 @@ void notFound(AsyncWebServerRequest *request) {
 
 void setup() {
   Serial.begin(115200);
+  
+
+  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); // Don't proceed, loop forever
+  }
+
+  display.setTextSize(1); // Draw 2X-scale text
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+
+  display.clearDisplay();
 
   LittleFS.begin();
   WiFi.mode(WIFI_STA);
   RTC.begin();
+  sensors.begin();
+  pinMode(Switch, OUTPUT);
 
   config = JsonConfig();
 
+  display.println("Connection start...");
+  display.display();
+
   connectToNetwork();
-  Serial.println("\nFinished connection");
-  setupServer();
-  Serial.println("\nFinished server setup");
 
-  Serial.println("ESP ready to work!");
-  
-  Serial.println("IP Address: ");
-  Serial.println(WiFi.localIP());
+  if (networkSuccessefull){
+    
+    Serial.println("\nFinished connection");
+    setupServer();
+    Serial.println("\nFinished server setup");
 
+    Serial.println("ESP ready to work!");
+    
+    Serial.println("IP Address: ");
+    Serial.println(WiFi.localIP());
+    display.println("IP Adress: ");
+    display.println(WiFi.localIP());
+  }
+  else{
+    display.println("Connection Failed. Try reconnecting");
+  }
+
+  display.display();
 }
 
 void loop() {
@@ -206,6 +260,12 @@ tmElements_t createElements(const char* str) {
   return tm;
 }
 
+void finishConnectionSession(){
+  //Serial.println("finishConnectionSession()");
+  display.println("No networks found");
+  networkSuccessefull = false;
+}
+
 void connectToNetwork(){
   JsonArray networksArr = config["network"].as<JsonArray>();
   JsonObject network;
@@ -223,7 +283,12 @@ void connectToNetwork(){
       Serial.print(" : ");
       Serial.print(network["PASSWORD"].as<const char*>());
 
+      display.print(network["SSID"].as<const char*>());
+
+      display.println("<[X]");
+
       Serial.println("  <== WiFi Failed!");
+      networkSuccessefull = false;
       failureBlink();
       continue;
     }
@@ -233,6 +298,11 @@ void connectToNetwork(){
       Serial.print(network["PASSWORD"].as<const char*>());
 
       Serial.print("  <== Wifi Succeeded");
+
+      display.print(network["SSID"].as<const char*>());
+
+      display.println("<[S]");
+      networkSuccessefull = true;
 
       if (i<networkSize-1) {
         stoppedOnNetwork = i;
@@ -272,6 +342,7 @@ void setupServer(){
 
   //CALLBACK FUNCTION
   server.on("/callback", HTTP_POST, [](AsyncWebServerRequest *request){
+    
     int STATUS_CODE = 200;
     String id_Buffer, responseStr;
     Serial.print("\n New Client connected: -Param:");
@@ -287,7 +358,7 @@ void setupServer(){
           user.id = id_Buffer.toInt();
           Serial.println(" @id");
 
-          Serial.println(user.id);
+          Serial.println((user.id));
           Serial.println(user.par_name);
           Serial.println(user.par_password);
 
@@ -310,6 +381,7 @@ void setupServer(){
       responseStr= responseStr + BoolToString(user.RIGHTS[i]) + ",";
     }
     responseStr= responseStr+ BoolToString(user.RIGHTS[5]);
+
 
     request->send(STATUS_CODE, "application/json", String("{\"RIGHTS\":[")+responseStr+String("]}"));
   });
@@ -515,6 +587,7 @@ void setupServer(){
   });
 
   server.on("/closeGate", HTTP_GET, [](AsyncWebServerRequest *request){
+    Serial.print("\n=== USER CLOSED GATE ===");
     FilegateOpen = false;
     request->send(200);
   });
@@ -524,6 +597,20 @@ void setupServer(){
     request->send(200, "text/plain", "none");
   });  
 
+  server.on("/forceReadVoltage", HTTP_GET, [](AsyncWebServerRequest *request){
+    String V[2] = {readVoc(), readV_lowRes()};
+
+    String response = "[" + V[0] + "," + V[1] + "]";
+
+    request->send(200, "application/json", "{\"voltage\":["+response+"]}");
+  });
+
+  server.on("/forceUpdateLog", HTTP_GET, [](AsyncWebServerRequest *request){
+    
+    String resp = updateLog();
+
+    request->send(200, String(), resp);
+  }); 
 
   server.onNotFound(notFound);
 
@@ -567,10 +654,6 @@ void failureBlink(){
 
   Serial.println("Failure");
 
-}
-
-void finishConnectionSession(){
-  Serial.println("finishConnectionSession()");
 }
 
 inline String BoolToString(bool b)
@@ -673,4 +756,46 @@ void wipeFiles(int upTo){
   }
 
 
+}
+
+String updateLog(){
+  String line;
+
+  line = String(RTC.getYear())+"-"+String(RTC.getMonth())+"-"+String(RTC.getDay())+" "+String(RTC.getHours())+":"+String(RTC.getMinutes())+":"+String(RTC.getSeconds());
+  line += " " + String(readVoc()) + "|" + String(readV_lowRes());
+  line += " " + String(Get_hexTemp()) + "\n";
+
+  Serial.print("\n line created. Writing line: \n");
+  
+  writeToFile("logDay", line);
+  
+  return line;
+}
+
+String readVoc(){
+  unsigned int value;
+  digitalWrite(Switch, LOW);
+  delay(100);
+  value = analogRead(A0);
+  Serial.print("\nVoltage OC  = " + String(value, HEX) + " | " + String(value*3.22265/1000) + "V");
+  //Serial.println((int)(value*100));
+  return String((int)(value), HEX);
+}
+
+String readV_lowRes(){
+  unsigned int value;
+  digitalWrite(Switch, HIGH);
+  delay(5);
+  value = analogRead(A0);
+  Serial.print("\nVoltage LRES = " + String(value, HEX) + " | " + String(value*3.22265) + " mV");
+  //Serial.println((int)(value*100));
+  return String((int)(value), HEX);
+}
+
+String Get_hexTemp(){
+  sensors.requestTemperatures(); 
+  float temperatureC = sensors.getTempCByIndex(0);
+  float value = temperatureC;
+  Serial.println((int)(value*100));
+  return String((int)(value*100), HEX);
 }
