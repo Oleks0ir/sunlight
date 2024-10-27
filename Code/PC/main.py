@@ -1,9 +1,9 @@
 import requests as req
 import time
 
-IP = "http://192.168.178.67/"
+IP = "http://192.168.178.68/"
 
-Ltv = "2023-9-20 16:54:08"
+Ltv = "2023-9-20 16:54:10"
 
 name = "Testlog.log"
 
@@ -82,15 +82,26 @@ def sendBigFile():
 
     print(f'\n ===Gate closed: {req.get(url=IP + "closeGate").status_code}')
 
+def forceReadVoltage():
+    resp = req.get(url=IP + "forceReadVoltage")
+    display("Force Read Voltage, GET", resp)
+
+def forceUpdateLog():
+    resp = req.get(url=IP + "forceUpdateLog")
+    display("Force Read Voltage, GET", resp)
 
 
 if __name__ == "__main__":
-    main()
+    """main()
     mainTime = time.perf_counter()
-    #calltime()
+    calltime()
     calltimeTime = time.perf_counter() - mainTime
     sendBigFile()
     sendBigFileTime = time.perf_counter() - calltimeTime - mainTime
     completeTime= time.perf_counter()
     print(f"\n ==Execution time: {completeTime :.4f}s \n  >main(): {mainTime:.4f}s  ({mainTime*100/completeTime :.2f}%)\n  >calltime(): {calltimeTime :.4f}s  ({calltimeTime*100/completeTime :.2f}%)\n  >sendBigFile(): {sendBigFileTime :.4f}s ({sendBigFileTime*100/completeTime :.2f}%)")
-    #display("test getdataFromMultiplexer",req.get(url=IP+"data"))
+"""
+    forceReadVoltage()
+    forceUpdateLog()
+
+
