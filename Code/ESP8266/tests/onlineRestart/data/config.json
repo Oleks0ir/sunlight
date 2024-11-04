@@ -58,8 +58,7 @@
             "timers":[
                 {"MEASURE_STEP":60},
                 {"WAIT_FOR_CONNECTION":11},
-                {"NETWORK_STEP":29},
-                {"DISPLAY_TIMEOUT":10}
+                {"NETWORK_STEP":29}
             ],
             
             "allow":[

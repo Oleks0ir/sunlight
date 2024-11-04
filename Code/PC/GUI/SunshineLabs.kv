@@ -9,7 +9,7 @@ MainLayout:
     Widget_Temperature:
     Widget_VoltAmpers:
 
-<Widget_Monocristaline_Power>:
+<Widget_Monocristaline_Power@AnchorLayout>:
     size_hint: 0.5, 1
 
     AnchorLayout:
@@ -20,12 +20,15 @@ MainLayout:
             text: "Monocristaline"
 
     RelativeLayout:
-        BoxLayout:
+        ScrollView:
+            orientation: "horizontal"
+            size_hint: 1,1
+            do_scroll_x: True
+            do_scroll_y: False
+            pos_hint: {"center_x": 0.5, "y": .05}
+
             VoltageGraph_Monocristaline:
                 size_hint: None, None
-                width: dp(1000)
-                height: dp(200)
-
 
 
 
@@ -43,10 +46,10 @@ MainLayout:
     RelativeLayout:
         ScrollView:
             orientation: "horizontal"
-            size_hint: (0.7, 0.8)
+            size_hint: .7, 1
             do_scroll_x: True
             do_scroll_y: False
-            pos_hint: {"center_x": .5, "y": 0}
+            pos_hint: {"center_x": 0.5, "y": .05}
 
             VoltageGraph_Polycristaline:
                 size_hint: None, None
@@ -91,4 +94,10 @@ MainLayout:
                 size_hint: .3, .1
                 text: "Sendtime"
                 on_press: root.sendDate(timeInput)
+
+            Button:
+                size_hint: .3, .1
+                text: "TestOpen"
+                on_press: root.testopen()
+
 

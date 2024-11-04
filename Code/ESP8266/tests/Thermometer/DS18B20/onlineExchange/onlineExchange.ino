@@ -1,13 +1,7 @@
 /*
- This code allows to rewrite existing files on ESP8266 LittleFS
-  Protocol:
-    1.Open Gate with ID of last log file you will be replacing OR -1 for config.json. /log/logInfo.json is being rewritten every time.
-    2.Dump Gate with filename and one line at a time.
-    3.Close gate (Get request with no Params)
-
-
+ {TEXT}
 TODO:
-  [◄] {TASK}
+  [◄]Solve panic attack
 
   [◄] = alt +17
   [√] = alt + 251
@@ -31,10 +25,20 @@ TODO:
 #include "FS.h"
 #include <LittleFS.h>
 
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#define Mult1 5
+
 #define FORMAT_LITTLEFS_IF_FAILED true
 
 
 AsyncWebServer server(80);
+
+const int oneWireBus = 2;  
+OneWire oneWire(oneWireBus);
+
+// Pass our oneWire reference to Dallas Temperature sensor 
+DallasTemperature sensors(&oneWire);
 
 const char* filepar_name = "/config.json"; 
 
@@ -56,8 +60,6 @@ int lastLog = 0;
 int WAIT_FOR_CONNECTION; //not implemented in noSleep
 bool requestFlag = false;
 bool allowCallback = false;
-
-bool FilegateOpen = false;
 
 String lastRespLogList[4] = {
   "logDay",
@@ -98,6 +100,7 @@ void setup() {
   WiFi.mode(WIFI_STA);
 
   config = JsonConfig();
+  sensors.begin();
 
   connectToNetwork();
   Serial.println("\nFinished connection");
@@ -117,165 +120,9 @@ void setupServer(){
     request->send(200, "text/plain", "test");
   });
 
-  server.on("/openGate", HTTP_POST,  [](AsyncWebServerRequest *request){
-    int status = 401;
-
-    Serial.print("\n === USER HAS REQUESTED GATE OPENING ==> ");
-    if (request->hasParam("dataIndex", true)) {
-      status = 200;
-      FilegateOpen = true;
-      Serial.print("GRANTED\n");
-      String req=request->getParam("dataIndex", true)->value();
-      wipeFiles(req.toInt());
-    }else{Serial.print("DENIED");}
-
-    request->send(status);
-  });
-  
-  server.on("/dunkGate", HTTP_POST,  [](AsyncWebServerRequest *request){
-    int status = 401;
-
-    Serial.print("\n === USER DUNKS GATE ==> ");
-
-    if (request->hasParam("filename", true) && request->hasParam("line", true) && FilegateOpen) {
-      status = 200;
-      Serial.print("GRANTED\n");
-
-      writeToFile(request->getParam("filename", true)->value(), request->getParam("line", true)->value());
-
-    } else if(FilegateOpen){Serial.print("DENIED ON PARAM INCOMPLETE\n");
-    } else {Serial.print("DENIED ON CLOSED GATE\n");}
-
-    request->send(status);
-  });
-
-  server.on("/dunkJsonGate", HTTP_POST,  [](AsyncWebServerRequest *request){
-    int status = 401;
-
-    Serial.print("\n === USER DUNKS GATE ==> ");
-
-    if (request->hasParam("line", true) && FilegateOpen) {
-      status = 200;
-      Serial.print("GRANTED\n");
-
-      writeToJson(request->getParam("line", true)->value());
-
-    } else if(FilegateOpen){Serial.print("DENIED ON PARAM INCOMPLETE\n");
-    } else {Serial.print("DENIED ON CLOSED GATE\n");}
-
-    request->send(status);
-  });
-
-  server.on("/closeGate", HTTP_GET, [](AsyncWebServerRequest *request){
-    FilegateOpen = false;
-    request->send(200);
-  });
-  
-
   server.onNotFound(notFound);
 
   server.begin();
-}
-
-void writeToJson(String line){
-  String path = filepar_name;
-  File file;
-  bool fileExists = LittleFS.exists(path);
-
-  if(fileExists){
-    file = LittleFS.open(path, "a");
-    Serial.print("\n Appending file with line: \""+line+"\" \n Result -> ");
-    
-    if (file.print(line)) {
-      Serial.println("Message appended");
-    } else {
-      Serial.println("Append failed");
-    }  
-  } else{
-    file = LittleFS.open(path, "w");
-    Serial.print("\n<> Creating file with line: \""+line+"\" \n Result -> ");
-
-    if (!file) {
-      Serial.println("Failed to open file for writing");
-      return;
-    }
-    if (file.print(line)) {
-      Serial.println("File written");
-    } else {
-      Serial.println("Write failed");
-    }
-
-  }
-  file.close();
-
-}
-
-
-void writeToFile(String filename, String line){
-  String path = "/log/"+filename;
-  File file;
-  bool fileExists = LittleFS.exists(path);
-
-  if(fileExists){
-    file = LittleFS.open(path, "a");
-    Serial.print("\n Appending file with line: \""+line+"\" \n Result -> ");
-    
-    if (file.print(line)) {
-      Serial.println("Message appended");
-    } else {
-      Serial.println("Append failed");
-    }  
-  } else{
-    file = LittleFS.open(path, "w");
-    Serial.print("\n<> Creating file with line: \""+line+"\" \n Result -> ");
-
-    if (!file) {
-      Serial.println("Failed to open file for writing");
-      return;
-    }
-    if (file.print(line)) {
-      Serial.println("File written");
-    } else {
-      Serial.println("Write failed");
-    }
-
-  }
-  file.close();
-
-}
-
-void wipeFiles(int upTo){
-  Serial.println("WIPING FILES");
-  String wipePath;
-  
-  if (upTo>=0){
-  for(int i = 0; i<=upTo; i++){
-    wipePath = "/log/"+lastRespLogList[i]+".log";
-    if (LittleFS.remove(wipePath)) {
-      Serial.println(" - "+wipePath+" deleted");
-      continue;
-    } else {
-      Serial.println("###"+wipePath+" delete failed");
-    }
-  }
-
-  if (LittleFS.remove("/log/logInfo.json")) {
-      Serial.println(" - /log/logInfo.json deleted");
-    } else {
-      Serial.println("###/log/logInfo.json delete failed");
-    }
-  }
-  else if(upTo = -1){
-    if (LittleFS.remove("/config.json")) {
-      Serial.println(" - /config.json deleted");
-    } else {
-      Serial.println("###/config.json delete failed");
-    }
-  } else{
-    Serial.println("FILE OUT OF BOUNDS");
-  }
-
-
 }
 
 
@@ -292,12 +139,7 @@ JsonDocument JsonConfig(){
       JsonSerial += file.readString();
     }
 
-  Serial.println(JsonSerial);
-
   deserializeJson(FullJson, JsonSerial);
-
-  Serial.println(FullJson.as<String>());
-
   return FullJson;
 
 }
@@ -405,7 +247,14 @@ inline String BoolToString(bool b)
   return b ? "true" : "false";
 }
 
-
+String Get_hexTemp(){
+  sensors.requestTemperatures(); 
+  float temperatureC = sensors.getTempCByIndex(0);
+  float value = temperatureC;
+  Serial.println((int)(value*100));
+  return String((int)(value*100), HEX);
+  //return "96c";
+}
 
 void loop() {
   // put your main code here, to run repeatedly:

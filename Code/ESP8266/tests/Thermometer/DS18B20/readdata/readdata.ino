@@ -32,5 +32,5 @@ void loop() {
   Serial.print(temperatureC);
   Serial.println("ºC");
 
-  delay(5000);
+  delay(3000);
 }
