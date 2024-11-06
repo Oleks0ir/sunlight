@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0" version="24.8.3">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
-    <mxGraphModel dx="3613" dy="2312" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="4396" dy="2769" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
@@ -163,7 +163,7 @@
           <mxGeometry x="650" y="140" width="125" height="40" as="geometry" />
         </mxCell>
         <mxCell id="w09JISdS2XsOrVuGE6zS-74" value="Callback request" style="swimlane;fillColor=#d5e8d4;strokeColor=#82b366;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
-          <mxGeometry x="-1130" y="340" width="1250" height="900" as="geometry">
+          <mxGeometry x="-1130" y="340" width="1270" height="900" as="geometry">
             <mxRectangle x="-580" y="95" width="120" height="30" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
@@ -316,7 +316,7 @@
         <mxCell id="w09JISdS2XsOrVuGE6zS-219" value="&lt;b&gt;allowCallback = true&lt;/b&gt;" style="whiteSpace=wrap;html=1;rounded=1;arcSize=14;strokeWidth=2;" parent="w09JISdS2XsOrVuGE6zS-74" vertex="1">
           <mxGeometry x="72" y="630" width="120" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="w09JISdS2XsOrVuGE6zS-223" value="20 s timer!" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.display;whiteSpace=wrap;rounded=1;strokeColor=default;align=center;verticalAlign=middle;arcSize=14;fontFamily=Helvetica;fontSize=12;fontColor=default;fillColor=default;" parent="w09JISdS2XsOrVuGE6zS-74" vertex="1">
+        <mxCell id="w09JISdS2XsOrVuGE6zS-223" value="20 s timer!" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.display;whiteSpace=wrap;rounded=1;strokeColor=#b85450;align=center;verticalAlign=middle;arcSize=14;fontFamily=Helvetica;fontSize=12;fillColor=#f8cecc;" parent="w09JISdS2XsOrVuGE6zS-74" vertex="1">
           <mxGeometry x="850" y="610" width="100" height="60" as="geometry" />
         </mxCell>
         <mxCell id="w09JISdS2XsOrVuGE6zS-224" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;fontFamily=Helvetica;fontSize=12;fontColor=default;" parent="w09JISdS2XsOrVuGE6zS-74" source="w09JISdS2XsOrVuGE6zS-209" target="w09JISdS2XsOrVuGE6zS-223" edge="1">
@@ -374,6 +374,9 @@
         </mxCell>
         <mxCell id="CPudYiVrlU0rURvNaWUE-7" value="PROCEED" style="whiteSpace=wrap;html=1;rounded=1;arcSize=14;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#82b366;" parent="w09JISdS2XsOrVuGE6zS-74" vertex="1">
           <mxGeometry x="50" y="870" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="aa8OQquXCtlL6-ml-VIQ-1" value="Not needed and not made yet" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="w09JISdS2XsOrVuGE6zS-74">
+          <mxGeometry x="880" y="652.5" width="90" height="90" as="geometry" />
         </mxCell>
         <mxCell id="w09JISdS2XsOrVuGE6zS-135" value="" style="edgeStyle=entityRelationEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Helvetica;fontSize=12;fontColor=default;startArrow=circle;startFill=1;endArrow=oval;endFill=0;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="w09JISdS2XsOrVuGE6zS-78" target="w09JISdS2XsOrVuGE6zS-134" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -470,7 +473,7 @@
           <mxGeometry y="180" width="20" height="20" as="geometry" />
         </mxCell>
         <mxCell id="w09JISdS2XsOrVuGE6zS-136" value="Config.json - User" style="swimlane;fillColor=#d0cee2;strokeColor=#56517e;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
-          <mxGeometry x="-1320" y="10" width="500" height="250" as="geometry">
+          <mxGeometry x="-1320" y="10" width="500" height="290" as="geometry">
             <mxRectangle x="-1320" y="10" width="130" height="40" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
@@ -509,6 +512,9 @@
         </mxCell>
         <mxCell id="w09JISdS2XsOrVuGE6zS-158" value="" style="shape=waypoint;sketch=0;size=6;pointerEvents=1;points=[];fillColor=default;resizable=0;rotatable=0;perimeter=centerPerimeter;snapToPoint=1;rounded=1;arcSize=14;strokeWidth=2;" parent="w09JISdS2XsOrVuGE6zS-136" vertex="1">
           <mxGeometry x="50" y="20" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="aa8OQquXCtlL6-ml-VIQ-0" value="Not needed and not made yet" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="w09JISdS2XsOrVuGE6zS-136">
+          <mxGeometry x="-10" y="190" width="90" height="90" as="geometry" />
         </mxCell>
         <mxCell id="w09JISdS2XsOrVuGE6zS-189" style="edgeStyle=entityRelationEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fontFamily=Helvetica;fontSize=12;fontColor=default;opacity=20;startArrow=oval;startFill=0;endArrow=oval;endFill=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="w09JISdS2XsOrVuGE6zS-76" target="w09JISdS2XsOrVuGE6zS-78" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -942,6 +948,9 @@
         </mxCell>
         <mxCell id="oldKrcCkbD7yEpKPVska-15" value="Gate&lt;div style=&quot;font-size: 11px;&quot;&gt;&amp;nbsp;closing&lt;/div&gt;" style="shape=step;perimeter=stepPerimeter;fixedSize=1;points=[];whiteSpace=wrap;html=1;fontSize=11;" parent="oldKrcCkbD7yEpKPVska-12" vertex="1">
           <mxGeometry x="186" y="33" width="100" height="57" as="geometry" />
+        </mxCell>
+        <mxCell id="aa8OQquXCtlL6-ml-VIQ-2" value="No sleep cicle implemented" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="324" y="850" width="106" height="117.5" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
