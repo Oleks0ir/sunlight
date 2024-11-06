@@ -6,6 +6,9 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.switch import Switch
 from kivy.uix.button import Button
 
+import server_api as server
+import json
+
 
 # Load initial configuration from JSON
 def load_config():
@@ -31,7 +34,7 @@ class ConfiguratorApp(App):
         for net in self.config_data["network"]:
             box = BoxLayout(orientation='horizontal')
             ssid_input = TextInput(text=net["SSID"])
-            pass_input = TextInput(text=net["PASSWORD"], password=True)
+            pass_input = TextInput(text=net["PASSWORD"])
             self.network_inputs.append((ssid_input, pass_input))
             box.add_widget(Label(text=f"ID {net['ID']}:"))
             box.add_widget(ssid_input)
@@ -44,7 +47,7 @@ class ConfiguratorApp(App):
         for client in self.config_data["clients"]:
             box = BoxLayout(orientation='horizontal')
             host_input = TextInput(text=client["HOST"])
-            pass_input = TextInput(text=client["PASSWORD"], password=True)
+            pass_input = TextInput(text=client["PASSWORD"])
             rights_switches = [Switch(active=right) for right in client["RIGHTS"]]
             self.client_inputs.append((host_input, pass_input, rights_switches))
             box.add_widget(host_input)
@@ -77,10 +80,17 @@ class ConfiguratorApp(App):
             box.add_widget(allow_input)
             root.add_widget(box)
 
-        # Save Button
-        save_button = Button(text="Save Configuration", size_hint_y=None, height=50)
+        # Save Button line
+        ButtonBox = BoxLayout(orientation='horizontal')
+        save_button = Button(text="Save Configuration", size_hint_y=None, height=50, size_hint_x=0.5)
+        upload_button = Button(text="Upload to ESP", size_hint_y=None, height=50, size_hint_x=0.5)
         save_button.bind(on_press=self.save_configuration)
-        root.add_widget(save_button)
+        upload_button.bind(on_press=self.UploadConfig)
+
+        ButtonBox.add_widget(upload_button)
+        ButtonBox.add_widget(save_button)
+
+        root.add_widget(ButtonBox)
 
         return root
 
@@ -111,6 +121,16 @@ class ConfiguratorApp(App):
         save_config(self.config_data)
         print("Configuration saved.")
 
+    def UploadConfig(self, instance):
+        esp.uploadJson()
+
+
 
 if __name__ == "__main__":
+    userConfig = json.loads(open("UserConfig.json", "r").read())
+
+    esp = server.server(IP=userConfig["stations"][0]["IP"], host_id=userConfig["user"]["id"],
+                        host=userConfig["user"]["hostname"], password=userConfig["user"]["password"],
+                        LtV=userConfig["stations"][0]["LtV"])
+
     ConfiguratorApp().run()

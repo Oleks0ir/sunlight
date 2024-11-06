@@ -2,31 +2,61 @@
     "__comment__":[
         {
             "RIGHTS":[
-                {"1":"call data"},
-                {"2":"edit clients"},
-                {"3":"edit networks"},
-                {"4":"edit statics"},
-                {"5":"pull config"},
-                {"6":"load config"}
+                {"0":"call data"},
+                {"1":"edit clients"},
+                {"2":"edit networks"},
+                {"3":"edit statics"},
+                {"4":"pull config"},
+                {"5":"load config"}
         ]
     }
     ],
 
     "network":[
-        {"ID":0, "MASTER":"Magical Device", "PASSWORD":"groob123"},
-        {"ID":1, "SSID":"Magical Device", "PASSWORD":"groob123"}
+        {"ID":0, "SSID":"Magical Device", "PASSWORD":"PASSWORD"},
+        {"ID":1, "SSID":"SSID", "PASSWORD":"PASSWORD!"},
+        {"ID":2, "SSID":"Fake", "PASSWORD":"nonoe"}
         ],
 
     "clients":[
-        {"HOST":"admin", "PASSWORD":"admin", "RIGHTS":[1,2,3,4,5,6]},
-        {"HOST":"Test1", "PASSWORD":"Tornado123", "RIGHTS":[1]},
-        {"HOST":"Test2", "PASSWORD":"none", "RIGHTS":[1,6]}
+        {"HOST":"admin", "PASSWORD":"admin", "RIGHTS":[
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+        ]},
+        {"HOST":"Guest", "PASSWORD":"none", "RIGHTS":[
+            false,
+            true,
+            false,
+            false,
+            false,
+            false
+        ]},
+        {"HOST":"Test2", "PASSWORD":"none", "RIGHTS":[
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+        ]},
+        {"HOST":"Jujin", "PASSWORD":"1r31731", "RIGHTS":[
+            true,
+            false,
+            false,
+            true,
+            true,
+            true
+        ]}
         ],
     
     "statics":[
         {
             "timers":[
-                {"MEASURE_STEP":59},
+                {"MEASURE_STEP":60},
                 {"WAIT_FOR_CONNECTION":11},
                 {"NETWORK_STEP":29}
             ],

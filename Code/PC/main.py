@@ -2,7 +2,7 @@ import requests as req
 import time
 import json
 
-IP = "http://192.168.178.73/"
+IP = "http://{ESP IP}/"
 
 Ltv = "2024-10-29 8:14:00"
 
@@ -111,7 +111,7 @@ def uploadJson():
 
     i=0
     while i< len(listed_f):
-        print(f'Writing of {listed_f[i]} \n -> {req.post(url=IP + "dunkJsonGate", data={"filename": "config.json", "line": str(listed_f[i])}).status_code}')
+        print(f'Writing of {listed_f[i]} \n -> {req.post(url=IP + "dunkJsonGate", data={"filename": "configESP.json", "line": str(listed_f[i])}).status_code}')
         i+=1
 
     print(f'\n ===Gate closed: {req.get(url=IP + "closeGate").status_code}')

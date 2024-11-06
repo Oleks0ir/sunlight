@@ -13,8 +13,8 @@
     ],
 
     "network":[
-        {"ID":0, "SSID":"Magical Device", "PASSWORD":"groob123"},
-        {"ID":1, "SSID":"Labor2", "PASSWORD":"DasIstGeheim321!"},
+        {"ID":0, "SSID":"Magical Device", "PASSWORD":"PASSWORD"},
+        {"ID":1, "SSID":"SSID", "PASSWORD":"PASSWORD!"},
         {"ID":2, "SSID":"Fake", "PASSWORD":"nonoe"}
         ],
 

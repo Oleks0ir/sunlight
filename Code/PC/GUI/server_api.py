@@ -1,15 +1,9 @@
 import requests as req
 import time
 
-lastLog = -1
-name = "TestlogR.log"
-
 
 def formattime(time):
     pass
-
-def returnPoints():
-    return [1,2,3,4,4,100,30,2,5,67,89,571,2,3,4,4,100,30,2,5,67,89,571,2,3,4,4,100,30,2,5,67,89,571,2,3,4,4,100,30,2,5,67,89,57]
 
 
 class server():
@@ -94,6 +88,8 @@ class server():
         self.writeLogs(req.get(url=self.IP + "getMonth"), "logMonth.log")
         self.writeLogs(req.get(url=self.IP + "getYear"), "logYear.log")
 
+        self.files_recieved = True
+
     def writeLogs(self, request, log):
         print(f"{request} << {log} <<< {request.status_code}\n")
         if request.status_code == 200:
@@ -121,7 +117,7 @@ class server():
         i = 0
         while i < len(listed_f):
             print(
-                f'Writing of {listed_f[i]} \n -> {req.post(url=self.IP + "dunkJsonGate", data={"filename": "config.json", "line": str(listed_f[i])}).status_code}')
+                f'Writing of {listed_f[i]} \n -> {req.post(url=self.IP + "dunkJsonGate", data={"filename": "configESP.json", "line": str(listed_f[i])}).status_code}')
             i += 1
 
         print(f'\n ===Gate closed: {req.get(url=self.IP + "closeGate").status_code}')

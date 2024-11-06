@@ -1,0 +1,13 @@
+{
+  "user": {
+    "id": 0,
+    "hostname": "admin",
+    "password":"admin"
+  },
+  "stations": [
+    {"netname": "sunshine",
+      "IP": "http://192.168.178.73",
+      "LtV": "2024-10-29 8:14:00"}
+  ]
+
+}
