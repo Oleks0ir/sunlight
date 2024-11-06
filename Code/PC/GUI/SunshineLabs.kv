@@ -9,7 +9,7 @@ MainLayout:
     Widget_Temperature:
     Widget_VoltAmpers:
 
-<Widget_Monocristaline_Power>:
+<Widget_Monocristaline_Power@AnchorLayout>:
     size_hint: 0.5, 1
 
     AnchorLayout:
@@ -17,14 +17,17 @@ MainLayout:
         anchor_y: "top"
         Button:
             size_hint: .3, .1
-            text: "Monocristaline"
+            text: "Open-Curcuit voltage"
 
     RelativeLayout:
-        BoxLayout:
-            VoltageGraph_Monocristaline:
-                size_hint: None, None
-                width: dp(1000)
-                height: dp(200)
+        ScrollView:
+            orientation: "horizontal"
+            size_hint: .7,1
+            do_scroll_x: True
+            do_scroll_y: False
+            pos_hint: {"center_x": 0.5, "y": .05}
+
+            VoltageGraph_Voc:
 
 
 
@@ -38,20 +41,18 @@ MainLayout:
         anchor_y: "top"
         Button:
             size_hint: .3, .1
-            text: "Polycristaline"
+            text: "100 Om voltage"
 
     RelativeLayout:
         ScrollView:
             orientation: "horizontal"
-            size_hint: (0.7, 0.8)
+            size_hint: .7, 1
             do_scroll_x: True
             do_scroll_y: False
-            pos_hint: {"center_x": .5, "y": 0}
+            pos_hint: {"center_x": 0.5, "y": .05}
 
-            VoltageGraph_Polycristaline:
-                size_hint: None, None
-                width: dp(1000)
-                height: dp(200)
+            VoltageGraph_Res:
+
 
 
 
@@ -63,7 +64,18 @@ MainLayout:
         anchor_y: "top"
         Button:
             size_hint: .3, .1
-            text: "Temperature"
+            text: "Polycristaline"
+
+    RelativeLayout:
+        ScrollView:
+            orientation: "horizontal"
+            size_hint: .7, 1
+            do_scroll_x: True
+            do_scroll_y: False
+            pos_hint: {"center_x": 0.5, "y": .05}
+
+            Temperature_Graph:
+
 
 
 <Widget_VoltAmpers>:
@@ -88,7 +100,20 @@ MainLayout:
 
 
             Button:
-                size_hint: .3, .1
+                size_hint: .2, .1
                 text: "Sendtime"
                 on_press: root.sendDate(timeInput)
+
+            Button:
+                size_hint: .2, .1
+                text: "Update Logs"
+                on_press: root.updateLogs()
+
+            ToggleButton:
+                size_hint: .2, .1
+                text: "Connect ESP"
+                id: connected
+                state: "normal"
+                on_state: root.connect(self)
+
 

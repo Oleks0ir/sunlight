@@ -78,6 +78,15 @@ const char* logInfo = "/log/logInfo.json";
 
 const char* logResponse = "/log/logResp.log";
 
+const char* deviceName = "sunlight";
+
+unsigned long restartTimer = 0;  // Stores the time at which to restart
+bool restartPending = false; 
+
+unsigned long DisplayClearTimer = 0;  // Stores the time at which to restart
+bool DisplayClearPending = false; 
+bool LogPending = false;
+
 int Year, Month, Day, Hour, Minute, Second;
 tmElements_t tm;
 
@@ -164,13 +173,26 @@ void setup() {
     Serial.println("\nFinished server setup");
 
     Serial.println("ESP ready to work!");
+    if(!WiFi.setHostname(deviceName)){
+      WiFi.setHostname("sunlight2");
+    }
     
     Serial.println("IP Address: ");
     Serial.println(WiFi.localIP());
     display.println("IP Adress: ");
     display.println(WiFi.localIP());
+
+    Serial.println(WiFi.hostname());
+    display.print("host:");
+    display.println(WiFi.hostname());
+
+    DisplayClearPending = true;
+    DisplayClearTimer = millis() + config["statics"][0]["timers"][3]["DISPLAY_TIMEOUT"].as<int>()*1000;
+    Serial.print("Display Timeout in "); 
+    Serial.println();
   }
   else{
+    Serial.println("Connection Failed. Try reconnecting");
     display.println("Connection Failed. Try reconnecting");
   }
 
@@ -182,9 +204,10 @@ void setup() {
 void loop() {
  // Non-blocking LED Blink
   unsigned long currentMillis = millis();  // Get current time
-  if (currentMillis - previousMillis >= config["statics"][0]["timers"][0]["MEASURE_STEP"].as<int>()*1000) {
+  if ((currentMillis - previousMillis >= config["statics"][0]["timers"][0]["MEASURE_STEP"].as<int>()*1000) || LogPending) {
     previousMillis = currentMillis;       // Update the last time the LED was toggled
-    ledState = !ledState;                 // Toggle LED state
+    ledState = !ledState;          
+    LogPending = false;       // Toggle LED state
     updateLog();
     if(ledState){
       digitalWrite(Testled, HIGH);   
@@ -194,8 +217,19 @@ void loop() {
     }
     Serial.println(ledState ? "LED ON" : "LED OFF");
   }
+
+  if (restartPending && millis() >= restartTimer) {
+        ESP.restart();
+  }
+  if (DisplayClearPending && millis() >= DisplayClearTimer) {
+        display.clearDisplay();
+        display.display();
+        DisplayClearPending = false;
+  }
+
   yield();
 }
+
 
 JsonDocument JsonConfig(){
   File file = LittleFS.open(filepar_name, "r");
@@ -210,10 +244,16 @@ JsonDocument JsonConfig(){
       JsonSerial += file.readString();
     }
 
+  Serial.println(JsonSerial);
+
   deserializeJson(FullJson, JsonSerial);
+
+  Serial.println(FullJson.as<String>());
+
   return FullJson;
 
 }
+
 
 JsonDocument logInfoToJson(){
   Serial.print("\n => Accesing logInfo ");
@@ -363,6 +403,14 @@ void setupServer(){
       }
 
     request->send(200, "application/json", "{\"test\":\""+message+"\"}");
+  });
+
+  server.on("/forceRestart", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200);
+    Serial.println("UserRequestedRestart!");
+    
+    restartTimer = millis() + 100;  // 100 ms delay
+    restartPending = true; 
   });
 
   //CALLBACK FUNCTION
@@ -579,15 +627,15 @@ void setupServer(){
 
   }); 
 
-  server.on("/openGate", HTTP_POST,  [](AsyncWebServerRequest *request){
+    server.on("/openGate", HTTP_POST,  [](AsyncWebServerRequest *request){
     int status = 401;
 
     Serial.print("\n === USER HAS REQUESTED GATE OPENING ==> ");
-    if (request->hasParam("data", true)) {
+    if (request->hasParam("dataIndex", true)) {
       status = 200;
       FilegateOpen = true;
       Serial.print("GRANTED\n");
-      String req=request->getParam("data", true)->value();
+      String req=request->getParam("dataIndex", true)->value();
       wipeFiles(req.toInt());
     }else{Serial.print("DENIED");}
 
@@ -611,15 +659,31 @@ void setupServer(){
     request->send(status);
   });
 
+  server.on("/dunkJsonGate", HTTP_POST,  [](AsyncWebServerRequest *request){
+    int status = 401;
+
+    Serial.print("\n === USER DUNKS GATE ==> ");
+
+    if (request->hasParam("line", true) && FilegateOpen) {
+      status = 200;
+      Serial.print("GRANTED\n");
+
+      writeToJson(request->getParam("line", true)->value());
+
+    } else if(FilegateOpen){Serial.print("DENIED ON PARAM INCOMPLETE\n");
+    } else {Serial.print("DENIED ON CLOSED GATE\n");}
+
+    request->send(status);
+  });
+
   server.on("/closeGate", HTTP_GET, [](AsyncWebServerRequest *request){
-    Serial.print("\n=== USER CLOSED GATE ===");
     FilegateOpen = false;
     request->send(200);
   });
   
   server.on("/updateconfig", HTTP_POST, [](AsyncWebServerRequest *request){
 
-    request->send(200, "text/plain", "none");
+    request->send(404);
   });  
 
   server.on("/forceReadVoltage", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -629,19 +693,19 @@ void setupServer(){
 
     request->send(200, "application/json", "{\"voltage\":["+response+"]}");
   });
-
+/*
   server.on("/forceReadTemp", HTTP_GET, [](AsyncWebServerRequest *request){
 
     String response = "[" +Get_hexTemp()+"]";
 
     request->send(200, "application/json", "{\"temperature\":["+response+"]}");
   });
-
+*/
   server.on("/forceUpdateLog", HTTP_GET, [](AsyncWebServerRequest *request){
     
-    String resp = updateLog();
+    LogPending = true;
 
-    request->send(200, String(), resp);
+    request->send(200);
   }); 
 
   server.onNotFound(notFound);
@@ -724,6 +788,41 @@ void printTime(){
   Serial.println(" ");
 }
 
+
+void writeToJson(String line){
+  String path = filepar_name;
+  File file;
+  bool fileExists = LittleFS.exists(path);
+
+  if(fileExists){
+    file = LittleFS.open(path, "a");
+    Serial.print("\n Appending file with line: \""+line+"\" \n Result -> ");
+    
+    if (file.print(line)) {
+      Serial.println("Message appended");
+    } else {
+      Serial.println("Append failed");
+    }  
+  } else{
+    file = LittleFS.open(path, "w");
+    Serial.print("\n<> Creating file with line: \""+line+"\" \n Result -> ");
+
+    if (!file) {
+      Serial.println("Failed to open file for writing");
+      return;
+    }
+    if (file.print(line)) {
+      Serial.println("File written");
+    } else {
+      Serial.println("Write failed");
+    }
+
+  }
+  file.close();
+
+}
+
+
 void writeToFile(String filename, String line){
   String path = "/log/"+filename;
   File file;
@@ -777,7 +876,8 @@ void wipeFiles(int upTo){
     } else {
       Serial.println("###/log/logInfo.json delete failed");
     }
-  }else if(upTo = -1){
+  }
+  else if(upTo = -1){
     if (LittleFS.remove("/config.json")) {
       Serial.println(" - /config.json deleted");
     } else {
@@ -825,10 +925,10 @@ String readV_lowRes(){
 }
 
 String Get_hexTemp(){
-  /*sensors.requestTemperatures(); 
+  sensors.requestTemperatures(); 
   float temperatureC = sensors.getTempCByIndex(0);
   float value = temperatureC;
   Serial.println((int)(value*100));
-  return String((int)(value*100), HEX);*/
-  return "96c";
+  return String((int)(value*100), HEX);
+  //return "96c";
 }

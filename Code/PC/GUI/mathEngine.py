@@ -43,6 +43,8 @@ def decode_hexstring(hexstring) -> int:
 
     decoded = int()
     hexchars = (list(hexstring))
+    hexstring = hexstring.lower()
+    print(hexstring)
     hexchars.reverse()
 
     for i in range(0, len(hexchars)):
